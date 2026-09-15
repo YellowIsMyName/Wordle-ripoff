@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f5ef">
+  <title>Word Links | The Bostonian Times</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <button class="icon-button" id="menuButton" aria-label="Open sections">☰</button>
+    <a class="masthead" href="#top" aria-label="The Bostonian Times home">
+      <span>The Bostonian Times</span>
+      <small>Independent since 1872</small>
+    </a>
+    <div class="header-actions">
+      <span class="date" id="todayDate"></span>
+      <button class="icon-button" id="helpButton" aria-label="How to play">?</button>
+    </div>
+  </header>
+
+  <nav class="section-nav" id="sectionNav" aria-label="News sections">
+    <a href="#briefing">Latest</a><a href="#briefing">Boston</a><a href="#briefing">Politics</a>
+    <a href="#briefing">Culture</a><a href="#briefing">Sports</a><a class="active" href="#game">Games</a>
+  </nav>
+
+  <main id="top">
+    <section class="game-shell" id="game" aria-labelledby="gameTitle">
+      <div class="game-heading">
+        <div>
+          <p class="kicker">The daily word game</p>
+          <h1 id="gameTitle">Word Links</h1>
+          <p class="dek">Build a crossword chain. Connect the two gold words in as few points as possible.</p>
+        </div>
+        <div class="edition-badge"><strong id="puzzleNumber">No. 001</strong><span id="puzzleDate">September 8</span></div>
+      </div>
+
+      <div class="game-stats" aria-label="Game statistics">
+        <div><span>Score</span><strong id="score">0</strong></div>
+        <div><span>Words</span><strong id="wordCount">0</strong></div>
+        <div><span>Best</span><strong id="bestScore">—</strong></div>
+      </div>
+
+      <div class="game-layout">
+        <div class="board-panel">
+          <div class="board-wrap">
+            <div class="board" id="board" role="grid" aria-label="15 by 15 Word Links board"></div>
+            <div class="start-screen" id="startScreen">
+              <div class="start-mark" aria-hidden="true">W</div>
+              <p class="eyebrow">Today’s puzzle</p>
+              <h2>Make the connection.</h2>
+              <p>Connect the two gold words by adding words that cross on matching letters.</p>
+              <div class="start-steps" aria-label="Three quick steps">
+                <span><b>1</b> Pick a filled letter</span>
+                <span><b>2</b> Type a word using it</span>
+                <span><b>3</b> Place the green preview</span>
+              </div>
+              <button class="primary-button" id="startButton">Start game</button>
+            </div>
+          </div>
+          <p class="board-caption" id="boardCaption">Select a gold letter to begin.</p>
+        </div>
+
+        <aside class="play-panel" aria-label="Word controls">
+          <div class="how-card">
+            <p class="mini-kicker">Your turn</p>
+            <div class="step"><span>1</span><div><strong>Pick a filled tile</strong><p>This is where your new word will cross.</p></div></div>
+            <div class="step"><span>2</span><div><strong>Type a word</strong><p>It must contain the letter you picked.</p></div></div>
+            <div class="step"><span>3</span><div><strong>Check the preview</strong><p>Green means it fits. Then add it to the board.</p></div></div>
+          </div>
+
+          <form id="wordForm" autocomplete="off">
+            <label for="wordInput">Your word <span class="dictionary-badge">Dictionary checked</span></label>
+            <div class="input-wrap">
+              <input id="wordInput" type="text" inputmode="text" maxlength="15" placeholder="SELECT A TILE" disabled spellcheck="false" aria-describedby="costPreview">
+              <button type="button" class="clear-button" id="clearButton" aria-label="Clear word">×</button>
+            </div>
+            <p class="cost-preview" id="costPreview">Each word costs 10 + 1 per letter</p>
+
+            <fieldset>
+              <legend>Direction</legend>
+              <div class="segmented">
+                <label><input type="radio" name="direction" value="H" checked><span>↔ Horizontal</span></label>
+                <label><input type="radio" name="direction" value="V"><span>↕ Vertical</span></label>
+              </div>
+            </fieldset>
+
+            <div class="position-row">
+              <span>Matching letter position <small>Use arrows if it appears twice</small></span>
+              <div><button type="button" id="previousMatch" aria-label="Previous matching letter">‹</button><strong id="matchPosition">—</strong><button type="button" id="nextMatch" aria-label="Next matching letter">›</button></div>
+            </div>
+            <button class="primary-button place-button" id="placeButton" type="submit" disabled>Add to board <span>→</span></button>
+            <p class="message" id="message" aria-live="polite"></p>
+          </form>
+
+          <button class="replay-button" id="replayButton"><span>↻</span> Replay with new words</button>
+        </aside>
+      </div>
+    </section>
+
+    <section class="briefing" id="briefing" aria-labelledby="briefingTitle">
+      <div class="briefing-heading"><p class="kicker">Today’s briefing</p><h2 id="briefingTitle">Around Boston</h2></div>
+      <div class="story-grid">
+        <article class="lead-story"><div class="story-image skyline" role="img" aria-label="Illustrated Boston skyline"></div><p class="story-section">Metro</p><h3>Harbor plan puts new public spaces at the water’s edge</h3><p>City planners released the next phase of a long-running effort to reconnect neighborhoods with the waterfront.</p><a href="#">Read the story <span>→</span></a></article>
+        <article><p class="story-section">Weather</p><h3>A clear, crisp morning gives way to afternoon clouds</h3><p>The week begins with a classic hint of fall across Greater Boston.</p><a href="#">2 min read <span>→</span></a></article>
+        <article><p class="story-section">Culture</p><h3>Five small galleries worth crossing the river for</h3><p>Fresh exhibitions bring local artists into focus this month.</p><a href="#">4 min read <span>→</span></a></article>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="helpDialog">
+    <button class="dialog-close" id="closeHelp" aria-label="Close">×</button>
+    <p class="kicker">How to play</p><h2>Connect the gold words</h2>
+    <div class="rule-list">
+      <div><span>1</span><p><strong>Choose a filled letter.</strong> Your new word will cross the board at this tile.</p></div>
+      <div><span>2</span><p><strong>Type a word containing that letter.</strong> Choose horizontal or vertical. The green preview shows where it will go.</p></div>
+      <div><span>3</span><p><strong>Keep building a chain.</strong> New words cross one existing word. Your final word can bridge the two separate chains.</p></div>
+      <div><span>4</span><p><strong>Aim for a low score.</strong> Each word costs 10 points plus 1 point for every letter.</p></div>
+    </div>
+    <button class="primary-button" id="gotItButton">Got it</button>
+  </dialog>
+
+  <dialog id="winDialog" class="win-dialog">
+    <div class="win-mark">✓</div><p class="kicker">Connection made</p><h2>Nicely linked.</h2>
+    <p>You connected the two starting words in <strong id="finalWords">0 words</strong> for <strong id="finalScore">0 points</strong>.</p>
+    <div class="win-actions"><button class="primary-button" id="shareButton">Share result</button><button class="secondary-button" id="playAgainButton">New puzzle</button></div>
+    <p class="share-status" id="shareStatus" aria-live="polite"></p>
+  </dialog>
+
+  <footer><span>The Bostonian Times</span><p>News for a city that never stops thinking.</p><small>© 2026 The Bostonian Times</small></footer>
+  <script src="dictionary.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
