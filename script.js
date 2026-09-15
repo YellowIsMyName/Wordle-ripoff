@@ -1,8 +1,13 @@
 const SIZE = 15;
-const puzzles = [
-  { a: "HARBOR", b: "COMMON" }, { a: "BRICK", b: "WATER" },
-  { a: "BEACON", b: "GARDEN" }, { a: "RIVER", b: "MARKET" },
-  { a: "PUBLIC", b: "LIBRARY" }, { a: "AUTUMN", b: "SUBWAY" }
+const DAY_MS = 86400000;
+const ARCHIVE_START = new Date(2026, 0, 1);
+const ARCHIVE_KEY = "bostonian-word-links-archive-v1";
+const START_WORDS = [
+  "HARBOR", "COMMON", "BRICK", "WATER", "BEACON", "GARDEN", "RIVER", "MARKET",
+  "PUBLIC", "LIBRARY", "AUTUMN", "SUBWAY", "BOSTON", "COFFEE", "MUSEUM", "BRIDGE",
+  "PARK", "STREET", "SCHOOL", "PLANET", "CANDLE", "WINDOW", "POCKET", "CASTLE",
+  "FOREST", "SILVER", "SUMMER", "WINTER", "ORANGE", "PURPLE", "JOURNAL", "ROCKET",
+  "ISLAND", "BASKET", "FRIEND", "MORNING", "BREEZE", "CAMERA", "BUTTON", "THUNDER"
 ];
 
 const boardEl = document.querySelector("#board");
@@ -15,21 +20,37 @@ const placeButton = document.querySelector("#placeButton");
 const matchPositionEl = document.querySelector("#matchPosition");
 const costPreview = document.querySelector("#costPreview");
 const winDialog = document.querySelector("#winDialog");
+const archiveDialog = document.querySelector("#archiveDialog");
 
-let grid, words, selected, matchChoice, score, started, puzzleIndex;
+let grid, words, selected, matchChoice, score, started;
+let selectedDate = startOfDay(new Date());
+let calendarCursor = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
 
-function dateSeed() {
-  const now = new Date();
-  return Math.floor(new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() / 86400000);
+function startOfDay(date) { return new Date(date.getFullYear(), date.getMonth(), date.getDate()); }
+function utcDay(date) { return Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / DAY_MS); }
+function dateSeed(date = selectedDate) { return utcDay(date); }
+function dateKey(date = selectedDate) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-function init(newPuzzle = false) {
-  const seed = dateSeed();
-  puzzleIndex = newPuzzle ? Math.floor(Math.random() * puzzles.length) : seed % puzzles.length;
+function puzzleForDate(date) {
+  const seed = dateSeed(date);
+  const first = Math.abs(Math.imul(seed, 2654435761)) % START_WORDS.length;
+  let second = Math.abs(Math.imul(seed + 97, 1597334677)) % START_WORDS.length;
+  if (second === first) second = (second + 13) % START_WORDS.length;
+  return { a: START_WORDS[first], b: START_WORDS[second] };
+}
+
+function puzzleNumber(date = selectedDate) {
+  return Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(ARCHIVE_START.getFullYear(), ARCHIVE_START.getMonth(), ARCHIVE_START.getDate())) / DAY_MS) + 1;
+}
+
+function init(date = selectedDate) {
+  selectedDate = startOfDay(date);
   grid = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
   words = [];
   selected = null; matchChoice = 0; score = 0; started = false;
-  const pair = puzzles[puzzleIndex];
+  const pair = puzzleForDate(selectedDate);
   addWord(pair.a, 2, 1, "H", true);
   addWord(pair.b, 10, SIZE - pair.b.length - 1, "H", true);
   buildBoard(); updateStats(); resetEntry();
@@ -38,8 +59,9 @@ function init(newPuzzle = false) {
   message("", false);
   const today = new Date();
   document.querySelector("#todayDate").textContent = today.toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric" });
-  document.querySelector("#puzzleDate").textContent = today.toLocaleDateString("en-US", { month:"long", day:"numeric" });
-  document.querySelector("#puzzleNumber").textContent = `No. ${String((seed % 997) + 1).padStart(3,"0")}`;
+  document.querySelector("#puzzleDate").textContent = selectedDate.toLocaleDateString("en-US", { month:"long", day:"numeric", year:"numeric" });
+  document.querySelector("#puzzleNumber").textContent = `No. ${String(puzzleNumber()).padStart(3,"0")}`;
+  document.querySelector("#startEyebrow").textContent = dateKey(selectedDate) === dateKey(startOfDay(today)) ? "Today’s puzzle" : "From the archive";
 }
 
 function addWord(text, row, col, direction, starter = false) {
@@ -192,19 +214,97 @@ function isConnected() {
   return componentMap().get(starters[0].id) === componentMap().get(starters[1].id);
 }
 
+function readArchive() {
+  try { return JSON.parse(localStorage.getItem(ARCHIVE_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function saveArchive(data) { localStorage.setItem(ARCHIVE_KEY, JSON.stringify(data)); }
+
+function recordCompletion() {
+  const archive = readArchive();
+  const key = dateKey();
+  const previousBest = Number(archive[key]?.best) || Infinity;
+  archive[key] = {
+    completed: true,
+    best: Math.min(previousBest, score),
+    words: words.length - 2,
+    completedAt: new Date().toISOString()
+  };
+  saveArchive(archive);
+}
+
+function sameDate(a, b) { return dateKey(a) === dateKey(b); }
+
+function openArchive() {
+  calendarCursor = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+  renderCalendar();
+  archiveDialog.showModal();
+}
+
+function renderCalendar() {
+  const gridEl = document.querySelector("#calendarGrid");
+  const archive = readArchive();
+  const today = startOfDay(new Date());
+  const year = calendarCursor.getFullYear();
+  const month = calendarCursor.getMonth();
+  const firstWeekday = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  document.querySelector("#calendarMonth").textContent = calendarCursor.toLocaleDateString("en-US", { month:"long", year:"numeric" });
+  document.querySelector("#archiveCompleted").textContent = Object.values(archive).filter(record => record?.completed).length;
+  const previousButton = document.querySelector("#previousMonth");
+  const nextButton = document.querySelector("#nextMonth");
+  previousButton.disabled = year === ARCHIVE_START.getFullYear() && month === ARCHIVE_START.getMonth();
+  nextButton.disabled = year === today.getFullYear() && month === today.getMonth();
+  gridEl.innerHTML = "";
+
+  for (let slot = 0; slot < 42; slot++) {
+    const dayNumber = slot - firstWeekday + 1;
+    if (dayNumber < 1 || dayNumber > daysInMonth) {
+      const empty = document.createElement("span");
+      empty.className = "calendar-empty";
+      empty.setAttribute("aria-hidden", "true");
+      gridEl.appendChild(empty);
+      continue;
+    }
+    const day = new Date(year, month, dayNumber);
+    const key = dateKey(day);
+    const record = archive[key];
+    const isFuture = day > today;
+    const isBeforeArchive = day < ARCHIVE_START;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "calendar-day";
+    button.innerHTML = `<span>${dayNumber}</span>${record?.completed ? '<i aria-hidden="true">✓</i>' : ""}`;
+    button.disabled = isFuture || isBeforeArchive;
+    if (sameDate(day, today)) button.classList.add("today");
+    if (sameDate(day, selectedDate)) button.classList.add("selected");
+    if (record?.completed) button.classList.add("completed");
+    const label = `${day.toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric", year:"numeric" })}${record?.completed ? `, completed with a best score of ${record.best}` : isFuture ? ", locked" : ", available"}`;
+    button.setAttribute("aria-label", label);
+    button.title = record?.completed ? `Best score: ${record.best}` : "Play this puzzle";
+    button.addEventListener("click", () => {
+      init(day);
+      archiveDialog.close();
+      document.querySelector("#game").scrollIntoView({ behavior:"smooth", block:"start" });
+      setTimeout(() => document.querySelector("#startButton").focus(), 350);
+    });
+    gridEl.appendChild(button);
+  }
+}
+
 function win() {
   document.querySelectorAll(".filled").forEach((cell, i) => setTimeout(() => cell.classList.add("connected"), i * 10));
   const added = words.length - 2;
   document.querySelector("#finalWords").textContent = `${added} ${added === 1 ? "word" : "words"}`;
   document.querySelector("#finalScore").textContent = `${score} points`;
-  const key = "bostonian-word-links-best"; const best = Number(localStorage.getItem(key)) || Infinity;
-  if (score < best) localStorage.setItem(key, score);
+  recordCompletion();
   updateStats(); setTimeout(() => winDialog.showModal(), 550);
 }
 
 function updateStats() {
   scoreEl.textContent = score; wordCountEl.textContent = Math.max(0, words.length - 2);
-  bestScoreEl.textContent = localStorage.getItem("bostonian-word-links-best") || "—";
+  bestScoreEl.textContent = readArchive()[dateKey()]?.best || "—";
 }
 function resetEntry() { selected = null; input.value = ""; input.disabled = true; input.placeholder = "SELECT A TILE"; placeButton.disabled = true; matchPositionEl.textContent = "—"; costPreview.textContent = "Each word costs 10 + 1 per letter"; }
 function message(text, success) { messageEl.textContent = text; messageEl.classList.toggle("success", success); }
@@ -218,14 +318,20 @@ document.querySelector("#nextMatch").addEventListener("click", () => { matchChoi
 document.querySelector("#clearButton").addEventListener("click", () => { input.value = ""; renderPreview(); input.focus(); });
 document.querySelector("#wordForm").addEventListener("submit", placeWord);
 document.querySelector("#startButton").addEventListener("click", start);
-document.querySelector("#replayButton").addEventListener("click", () => init(true));
-document.querySelector("#playAgainButton").addEventListener("click", () => { winDialog.close(); init(true); start(); });
+document.querySelector("#replayButton").addEventListener("click", () => init(selectedDate));
+document.querySelector("#playAgainButton").addEventListener("click", () => { winDialog.close(); init(selectedDate); start(); });
+document.querySelector("#archiveButton").addEventListener("click", openArchive);
+document.querySelector("#archiveLink").addEventListener("click", openArchive);
+document.querySelector("#winArchiveButton").addEventListener("click", () => { winDialog.close(); openArchive(); });
+document.querySelector("#closeArchive").addEventListener("click", () => archiveDialog.close());
+document.querySelector("#previousMonth").addEventListener("click", () => { calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1); renderCalendar(); });
+document.querySelector("#nextMonth").addEventListener("click", () => { calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1); renderCalendar(); });
 document.querySelector("#helpButton").addEventListener("click", () => document.querySelector("#helpDialog").showModal());
 document.querySelector("#closeHelp").addEventListener("click", () => document.querySelector("#helpDialog").close());
 document.querySelector("#gotItButton").addEventListener("click", () => document.querySelector("#helpDialog").close());
 document.querySelector("#menuButton").addEventListener("click", () => document.querySelector("#sectionNav").classList.toggle("open"));
 document.querySelector("#shareButton").addEventListener("click", async () => {
-  const result = `Word Links ${document.querySelector("#puzzleNumber").textContent}\n${score} points · ${words.length - 2} words\n🔗 The Bostonian Times`;
+  const result = `Word Links ${document.querySelector("#puzzleNumber").textContent} · ${selectedDate.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" })}\n${score} points · ${words.length - 2} words\n🔗 The Bostonian Times`;
   try { await navigator.clipboard.writeText(result); document.querySelector("#shareStatus").textContent = "Result copied to clipboard."; }
   catch { document.querySelector("#shareStatus").textContent = "Copy unavailable in this browser."; }
 });

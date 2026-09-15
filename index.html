@@ -16,6 +16,7 @@
     </a>
     <div class="header-actions">
       <span class="date" id="todayDate"></span>
+      <button class="icon-button calendar-icon" id="archiveButton" aria-label="Open puzzle archive">▦</button>
       <button class="icon-button" id="helpButton" aria-label="How to play">?</button>
     </div>
   </header>
@@ -33,7 +34,7 @@
           <h1 id="gameTitle">Word Links</h1>
           <p class="dek">Build a crossword chain. Connect the two gold words in as few points as possible.</p>
         </div>
-        <div class="edition-badge"><strong id="puzzleNumber">No. 001</strong><span id="puzzleDate">September 8</span></div>
+        <div class="edition-badge"><strong id="puzzleNumber">No. 001</strong><span id="puzzleDate">September 8</span><button id="archiveLink" type="button">Browse archive</button></div>
       </div>
 
       <div class="game-stats" aria-label="Game statistics">
@@ -48,7 +49,7 @@
             <div class="board" id="board" role="grid" aria-label="15 by 15 Word Links board"></div>
             <div class="start-screen" id="startScreen">
               <div class="start-mark" aria-hidden="true">W</div>
-              <p class="eyebrow">Today’s puzzle</p>
+              <p class="eyebrow" id="startEyebrow">Today’s puzzle</p>
               <h2>Make the connection.</h2>
               <p>Connect the two gold words by adding words that cross on matching letters.</p>
               <div class="start-steps" aria-label="Three quick steps">
@@ -94,7 +95,7 @@
             <p class="message" id="message" aria-live="polite"></p>
           </form>
 
-          <button class="replay-button" id="replayButton"><span>↻</span> Replay with new words</button>
+          <button class="replay-button" id="replayButton"><span>↻</span> Restart this puzzle</button>
         </aside>
       </div>
     </section>
@@ -121,10 +122,27 @@
     <button class="primary-button" id="gotItButton">Got it</button>
   </dialog>
 
+  <dialog id="archiveDialog" class="archive-dialog">
+    <button class="dialog-close" id="closeArchive" aria-label="Close puzzle archive">×</button>
+    <p class="kicker">Past puzzles</p>
+    <div class="archive-title-row">
+      <div><h2>Puzzle archive</h2><p>Pick any previous day and play it whenever you like.</p></div>
+      <div class="archive-progress"><strong id="archiveCompleted">0</strong><span>Completed</span></div>
+    </div>
+    <div class="calendar-nav">
+      <button id="previousMonth" type="button" aria-label="Previous month">‹</button>
+      <strong id="calendarMonth">September 2026</strong>
+      <button id="nextMonth" type="button" aria-label="Next month">›</button>
+    </div>
+    <div class="calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+    <div class="calendar-grid" id="calendarGrid" role="grid" aria-label="Archived Word Links puzzles"></div>
+    <div class="calendar-legend"><span><i class="legend-dot completed"></i> Completed</span><span><i class="legend-dot selected"></i> Selected</span><span>Future puzzles unlock daily</span></div>
+  </dialog>
+
   <dialog id="winDialog" class="win-dialog">
     <div class="win-mark">✓</div><p class="kicker">Connection made</p><h2>Nicely linked.</h2>
     <p>You connected the two starting words in <strong id="finalWords">0 words</strong> for <strong id="finalScore">0 points</strong>.</p>
-    <div class="win-actions"><button class="primary-button" id="shareButton">Share result</button><button class="secondary-button" id="playAgainButton">New puzzle</button></div>
+    <div class="win-actions"><button class="primary-button" id="shareButton">Share result</button><button class="secondary-button" id="playAgainButton">Replay puzzle</button><button class="secondary-button" id="winArchiveButton">Puzzle archive</button></div>
     <p class="share-status" id="shareStatus" aria-live="polite"></p>
   </dialog>
 
